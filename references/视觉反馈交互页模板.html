@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>视觉反馈交互页 · 模板</title>
+<!--
+  ============================================================
+  视觉反馈交互页模板（V0.1.4 · 苹果生态设计系统）
+  用法：复制本文件 → 替换占位内容（中文注释标出）→
+        图片用 base64 内联或同目录文件 → 保存交付。
+  原则：交互服务于理解（对照/质疑/分层吸收），不为炫技。
+  ============================================================
+-->
+<style>
+  :root{
+    --bg:#f5f5f7; --card:#ffffff; --text:#1d1d1f; --sub:#86868b;
+    --accent:#0071e3; --accent-soft:#e8f0fe; --line:#d2d2d7;
+    --ok:#34c759; --warn:#ff9500; --bad:#ff3b30; --radius:18px;
+    --shadow:0 4px 24px rgba(0,0,0,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#000000; --card:#1c1c1e; --text:#f5f5f7; --sub:#98989d;
+           --accent:#0a84ff; --accent-soft:#0a2535; --line:#38383a;
+           --shadow:0 4px 24px rgba(0,0,0,.5); }
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  body{background:var(--bg);color:var(--text);
+       font:17px/1.65 -apple-system,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;
+       padding:0 0 96px}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+
+  /* ── 章节：分模块、分区呈现，一次只展开一个模块 ── */
+  section{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+          padding:28px;margin:24px 0}
+  .kicker{font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--accent);text-transform:uppercase}
+  h1{font-size:32px;font-weight:700;letter-spacing:-.02em;margin:8px 0 4px}
+  h2{font-size:24px;font-weight:700;letter-spacing:-.01em;margin:4px 0 12px}
+  h3{font-size:19px;font-weight:600;margin:20px 0 8px}
+  p.sub{color:var(--sub);font-size:15px}
+  p.body{margin:10px 0}
+  strong{color:var(--text)}
+  .tag{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:980px;
+       background:var(--accent-soft);color:var(--accent);margin-right:6px}
+  .tag.tech{background:rgba(52,199,89,.15);color:var(--ok)}
+  .tag.aes{background:rgba(255,149,0,.15);color:var(--warn)}
+
+  /* ── 图片区：图文并茂，图下必配可读文字 ── */
+  figure{margin:16px 0}
+  .photo{position:relative;border-radius:14px;overflow:hidden;background:#111}
+  .photo img{display:block;width:100%;height:auto}
+  /* 可点击标注点 */
+  .hotspot{position:absolute;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;
+           background:rgba(0,113,227,.92);color:#fff;font-size:15px;font-weight:700;
+           transform:translate(-50%,-50%);transition:transform .15s ease;
+           box-shadow:0 0 0 6px rgba(0,113,227,.25)}
+  .hotspot:hover{transform:translate(-50%,-50%) scale(1.12)}
+  .hotspot.active{background:var(--text)}
+  figcaption{font-size:15px;color:var(--sub);margin-top:10px;line-height:1.6}
+  figcaption strong{color:var(--text)}
+  /* 点击标注点弹出的讲解卡 */
+  .note{display:none;margin-top:12px;padding:16px 18px;border-radius:14px;background:var(--bg);
+        border-left:3px solid var(--accent);font-size:16px}
+  .note.show{display:block;animation:fade .2s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+
+  /* ── 前后对比滑块 ── */
+  .compare{position:relative;border-radius:14px;overflow:hidden;user-select:none;touch-action:none}
+  .compare img{display:block;width:100%;pointer-events:none}
+  .compare .after{position:absolute;inset:0;overflow:hidden}
+  .compare .after img{width:100%;max-width:none}
+  .compare .handle{position:absolute;top:0;bottom:0;width:3px;background:#fff;cursor:ew-resize;
+                   box-shadow:0 0 8px rgba(0,0,0,.4)}
+  .compare .handle::after{content:"⟺";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+      width:38px;height:38px;border-radius:50%;background:#fff;color:#333;font-size:16px;
+      display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+  .compare .lbl{position:absolute;bottom:10px;font-size:12px;font-weight:600;color:#fff;
+                background:rgba(0,0,0,.55);padding:3px 10px;border-radius:980px}
+
+  /* ── 分层呈现：折叠模块（渐进披露，防一口吃个胖子）── */
+  details{border:1px solid var(--line);border-radius:14px;margin:12px 0;overflow:hidden}
+  details summary{cursor:pointer;list-style:none;padding:16px 18px;font-size:17px;font-weight:600;
+                  display:flex;justify-content:space-between;align-items:center}
+  details summary::after{content:"＋";color:var(--sub);font-size:20px;font-weight:400}
+  details[open] summary::after{content:"－"}
+  details .inner{padding:0 18px 18px;font-size:16px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+
+  /* ── 步骤条：引导用户按顺序吸收 ── */
+  .steps{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap}
+  .steps button{flex:1;min-width:120px;border:1px solid var(--line);background:var(--card);color:var(--text);
+                border-radius:12px;padding:10px 12px;font-size:14px;font-weight:600;cursor:pointer;
+                font-family:inherit;transition:all .15s}
+  .steps button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .panel{display:none}.panel.show{display:block}
+
+  /* ── 数值条（图表的轻量替代：分区呈现）── */
+  .bar{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:14px}
+  .bar .name{width:88px;color:var(--sub);flex-shrink:0}
+  .bar .track{flex:1;height:10px;border-radius:5px;background:var(--bg);overflow:hidden}
+  .bar .fill{height:100%;border-radius:5px;background:var(--accent)}
+  .bar .val{width:64px;text-align:right;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ═══ 占位①：标题区 ═══ -->
+<header style="padding:48px 0 8px">
+  <div class="kicker">摄影分析 · 视觉反馈</div>
+  <h1><!-- 占位：核心判断一句话，如「瞬间抓得住，但注意力被屏幕抢走」--></h1>
+  <p class="sub"><!-- 占位：一句话背景（照片题材/用户目标/不确定项提示）--></p>
+</header>
+
+<!-- ═══ 占位②：第 1 模块 · 观察（原图 + 可点击标注点）═══ -->
+<section>
+  <div class="kicker">01 · 观察</div>
+  <h2><!-- 占位：模块标题 --></h2>
+  <figure>
+    <div class="photo">
+      <img src="<!-- 占位：原图（base64 或相对路径）-->">
+      <!-- 占位：标注点，style 用百分比定位到图中位置；每点对应一条讲解 -->
+      <button class="hotspot" style="left:62%;top:30%" data-note="n1">1</button>
+      <button class="hotspot" style="left:22%;top:70%" data-note="n2">2</button>
+    </div>
+    <figcaption><strong>点击图中的标注点</strong>，查看每一处观察的专业讲解。</figcaption>
+  </figure>
+  <div class="note" id="n1"><!-- 占位：标注点 1 的讲解文字（含判断类型标签）--></div>
+  <div class="note" id="n2"><!-- 占位：标注点 2 的讲解文字 --></div>
+</section>
+
+<!-- ═══ 占位③：第 2 模块 · 数据（数值条分区呈现，替代大表格）═══ -->
+<section>
+  <div class="kicker">02 · 实测数据</div>
+  <h2><!-- 占位：如「直方图分区实测」--></h2>
+  <!-- 占位：复制以下 .bar 行，每行一个分区 -->
+  <div class="bar"><span class="name">高光 ≥250</span><div class="track"><div class="fill" style="width:1%"></div></div><span class="val">0.5%</span></div>
+  <div class="bar"><span class="name">暗部 ≤25</span><div class="track"><div class="fill" style="width:21%"></div></div><span class="val">20.8%</span></div>
+  <figcaption><strong>怎么读：</strong><!-- 占位：用一句话教学生读这组数据，如「屏幕亮但未溢出，所以不能断言过曝」--></figcaption>
+</section>
+
+<!-- ═══ 占位④：第 3 模块 · 前后对比（拖动滑块）═══ -->
+<section>
+  <div class="kicker">03 · 调整示意</div>
+  <h2><!-- 占位：如「压暗背景后的效果」--></h2>
+  <figure>
+    <div class="compare" id="cmp">
+      <img src="<!-- 占位：调整前 -->">
+      <div class="after"><img src="<!-- 占位：调整后 -->"></div>
+      <div class="handle" style="left:50%"></div>
+      <span class="lbl" style="left:12px">调整前</span>
+      <span class="lbl" style="right:12px">调整后</span>
+    </div>
+    <figcaption><strong>拖动中间的手柄对比。</strong><!-- 占位：说明动了什么、没动什么（如「只动明度，颜色通道零改动」）--></figcaption>
+  </figure>
+</section>
+
+<!-- ═══ 占位⑤：第 4 模块 · 分层讲解（折叠区，渐进披露）═══ -->
+<section>
+  <div class="kicker">04 · 深入</div>
+  <h2>想继续了解？按需展开</h2>
+  <!-- 占位：每个 details 一个子主题，默认全部折叠 -->
+  <details><summary><!-- 占位：子主题 1 --></summary><div class="inner"><!-- 占位：内容 --></div></details>
+  <details><summary><!-- 占位：子主题 2 --></summary><div class="inner"><!-- 占位：内容 --></div></details>
+</section>
+
+<!-- ═══ 占位⑥：收尾 · 下一步（教学环节衔接：练习/回响）═══ -->
+<section>
+  <div class="kicker">05 · 下一步</div>
+  <h2><!-- 占位：如「一个可带走的小练习」--></h2>
+  <p class="body"><!-- 占位：具体可操作的练习或建议（因果链格式），以及教学式提问 --></p>
+  <p class="sub"><!-- 占位：不确定项与出处说明 --></p>
+</section>
+
+</div>
+
+<script>
+// 标注点：点击切换讲解卡
+document.querySelectorAll('.hotspot').forEach(h=>{
+  h.addEventListener('click',()=>{
+    const n=document.getElementById(h.dataset.note);
+    const was=n.classList.contains('show');
+    document.querySelectorAll('.note').forEach(x=>x.classList.remove('show'));
+    document.querySelectorAll('.hotspot').forEach(x=>x.classList.remove('active'));
+    if(!was){ n.classList.add('show'); h.classList.add('active'); }
+  });
+});
+// 前后对比滑块
+const cmp=document.getElementById('cmp');
+if(cmp){
+  const after=cmp.querySelector('.after'), handle=cmp.querySelector('.handle');
+  const set=x=>{const r=cmp.getBoundingClientRect();
+    let p=Math.min(Math.max((x-r.left)/r.width,0),1)*100;
+    handle.style.left=p+'%'; after.style.clipPath=`inset(0 0 0 ${p}%)`;};
+  let drag=false;
+  cmp.addEventListener('pointerdown',e=>{drag=true;set(e.clientX);cmp.setPointerCapture(e.pointerId)});
+  cmp.addEventListener('pointermove',e=>{if(drag)set(e.clientX)});
+  cmp.addEventListener('pointerup',()=>drag=false);
+}
+</script>
+</body>
+</html>
